@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Trash Admin — Login</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body class="bg-light">
+    <div
+      class="container vh-100 d-flex align-items-center justify-content-center"
+    >
+      <div
+        class="card shadow-sm rounded-3 login-card p-4"
+        style="max-width: 420px; width: 100%"
+      >
+        <div class="text-center mb-3">
+          <h2
+            class="mb-1"
+            style="font-family: Poppins, sans-serif; color: var(--primary)"
+          >
+            Smart Trash Admin
+          </h2>
+          <p class="text-secondary small">Admin sign in</p>
+        </div>
+
+        <div id="alert-placeholder"></div>
+
+        <form id="loginForm">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              class="form-control form-control-lg rounded-pill"
+              placeholder="admin@example.com"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="form-control form-control-lg rounded-pill"
+              placeholder="••••••"
+              required
+            />
+          </div>
+          <button
+            class="btn btn-success btn-lg w-100 rounded-pill"
+            id="loginBtn"
+            type="submit"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <div class="text-center mt-3 small text-muted">
+          Built for sustainability · QR-based management
+        </div>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/auth.js"></script>
+  </body>
+</html>
