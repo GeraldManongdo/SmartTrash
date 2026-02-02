@@ -78,13 +78,13 @@ window.submitBinForm = async function () {
   btn.disabled = true;
 
   try {
-    // Calculate status based on wet level
+    // Calculate status based on wet and dry level
     let status;
-    if (wetLevel + dryLevel >= 95) {
+    if (wetLevel + dryLevel % 2 >= 95) {
       status = "urgent";
-    } else if (wetLevel + dryLevel >= 75) {
+    } else if (wetLevel + dryLevel  % 2 >= 75) {
       status = "critical";
-    } else if (wetLevel + dryLevel >= 50) {
+    } else if (wetLevel + dryLevel % 2 >= 50) {
       status = "warning";
     } else {
       status = "normal";
