@@ -78,37 +78,40 @@ window.submitBinForm = async function () {
   btn.disabled = true;
 
   try {
-    // Calculate status based on wet and dry level
-    let status;
-    if (wetLevel + dryLevel % 2 >= 95) {
-      status = "urgent";
-    } else if (wetLevel + dryLevel  % 2 >= 75) {
-      status = "critical";
-    } else if (wetLevel + dryLevel % 2 >= 50) {
-      status = "warning";
-    } else {
-      status = "normal";
-    }
-
-    const binData = {
-      name,
-      location,
-      wetLevel,
-      dryLevel,
-      status,
-      lastCollected: new Date().toLocaleString(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-
     if (isEditing) {
+      // Calculate status based on wet and dry level for update
+      let status;
+      if (wetLevel + dryLevel >= 95) {
+        status = "urgent";
+      } else if (wetLevel + dryLevel >= 75) {
+        status = "critical";
+      } else if (wetLevel + dryLevel >= 50) {
+        status = "warning";
+      } else {
+        status = "normal";
+      }
+
+      const binData = {
+        name,
+        location,
+        wetLevel,
+        dryLevel,
+        status,
+        lastCollected: new Date().toLocaleString(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
       // Update existing document
       await db.collection("bins").doc(currentEditBin.id).update(binData);
       showAlert("Bin updated successfully!", "success");
     } else {
-      // Create new document
-      binData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection("bins").add(binData);
-      showAlert("Bin created successfully!", "success");
+      // Create new bin using the extracted function
+      const result = await createBin({ name, location, wetLevel, dryLevel });
+      if (result.success) {
+        showAlert(result.message, "success");
+      } else {
+        showAlert(result.message, "danger");
+      }
     }
 
     // Reset and Close

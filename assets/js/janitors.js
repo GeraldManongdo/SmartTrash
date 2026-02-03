@@ -1,254 +1,228 @@
-// Janitors management functionality - uses Firebase config from firebase-config.js
-// Global Variables to manage state
+// Janitors Management - Main Module
+// Modular implementation for better maintainability
+
+// Import modules
+// Note: In a real modular environment, these would be ES6 imports
+// For now, we'll load them as separate scripts in the HTML
+
+// Global Variables
 let janitorsData = []; // Store data locally for filtering
-let isEditing = false;
-let currentEditId = null;
+let viewModalElement; // View modal instance
 
-// 3. DOM Elements
-const tableBody = document.getElementById("janitorsTableBody");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const shiftFilter = document.getElementById("shiftFilter");
-let modalElement;
-let viewModalElement;
+// DOM Elements (will be initialized in DOMContentLoaded)
+let searchInput;
+let statusFilter;
+let shiftFilter;
 
-// Add missing addNewJanitor function
-window.addNewJanitor = function () {
-  resetModalState();
-  modalElement.show();
-};
-
-// 4. Initialize: Listen for Real-time Updates
+// Initialize application
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize Bootstrap modal
-  modalElement = new bootstrap.Modal(
-    document.getElementById("addJanitorModal"),
-  );
+  // Initialize DOM elements
+  searchInput = document.getElementById("searchInput");
+  statusFilter = document.getElementById("statusFilter");
+  shiftFilter = document.getElementById("shiftFilter");
+
+  // Check if elements exist
+  if (!searchInput || !statusFilter || !shiftFilter) {
+    console.error("Filter elements not found:", { searchInput, statusFilter, shiftFilter });
+    return;
+  }
+
+  console.log("Filter elements initialized successfully");
 
   // Initialize view modal
   viewModalElement = new bootstrap.Modal(
     document.getElementById("viewJanitorModal"),
   );
 
+  // Initialize form manager
+  formManager.initializeModals();
+
+  // Start fetching janitors
   fetchJanitors();
 
   // Attach Event Listeners for filters
   searchInput.addEventListener("input", filterJanitors);
+  searchInput.addEventListener("keyup", filterJanitors); // Also listen for keyup as backup
   statusFilter.addEventListener("change", filterJanitors);
+  statusFilter.addEventListener("input", filterJanitors); // Also listen for input as backup
   shiftFilter.addEventListener("change", filterJanitors);
+  shiftFilter.addEventListener("input", filterJanitors); // Also listen for input as backup
+
+  console.log("Event listeners attached for filters");
 });
 
-// --- CORE FIREBASE FUNCTIONS ---
-
-// READ: Fetch data in real-time
+// FETCH JANITORS WITH REAL-TIME UPDATES
 function fetchJanitors() {
-  // onSnapshot provides real-time updates automatically
-  db.collection("users")
-    .where("role", "==", "janitor")
-    .onSnapshot(
-      (snapshot) => {
-        janitorsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+  firebaseOps.fetchJanitors((janitors) => {
+    janitorsData = janitors;
+    console.log("Fetched janitors:", janitorsData.length);
+    console.log("Sample janitors data:", janitorsData.slice(0, 3).map(j => ({
+      name: j.name,
+      shift: j.shift,
+      status: j.status
+    })));
+    uiManager.renderJanitors(janitorsData);
+    uiManager.updateStats(janitorsData);
 
-        // Sort by createdAt in JavaScript to avoid composite index requirement
-        janitorsData.sort((a, b) => {
-          const aTime = a.createdAt?.toDate() || new Date(0);
-          const bTime = b.createdAt?.toDate() || new Date(0);
-          return bTime - aTime; // Descending order (newest first)
-        });
+    // If modal is open, update the modal UI with current data
+    if (viewModalElement.currentJanitorId) {
+      const currentJanitor = janitorsData.find(j => j.id === viewModalElement.currentJanitorId);
+      if (currentJanitor) {
+        uiManager.updateBreakDutyButtonWithStatus(viewModalElement.currentJanitorId, currentJanitor.status);
+        uiManager.updateClockButtonWithStatus(viewModalElement.currentJanitorId, currentJanitor.status);
+        // Update status badge
+        const statusBadge = document.getElementById("viewJanitorStatus");
+        if (statusBadge) {
+          statusBadge.textContent = uiManager.getStatusText(currentJanitor.status);
+          statusBadge.className = `status-badge ${uiManager.getStatusClass(currentJanitor.status).replace("status-badge ", "")}`;
+        }
+      }
+    }
 
-        console.log("Fetched janitors:", janitorsData.length); // Debug log
-        renderJanitors(janitorsData);
-        updateStats(janitorsData);
-      },
-      (error) => {
-        console.error("Error fetching janitors:", error);
-        showAlert("Error loading data: " + error.message, "danger");
-
-        // Fallback: try to fetch all users to see if any exist
-        db.collection("users")
-          .limit(5)
-          .get()
-          .then((snapshot) => {
-            console.log("Total users in collection:", snapshot.size);
-            snapshot.forEach((doc) => {
-              console.log("User:", doc.id, doc.data());
-            });
-          });
-      },
-    );
+    // Debug: Check if attendance collection has any documents
+    checkAttendanceCollection();
+  }).catch((error) => {
+    console.error("Error in fetchJanitors:", error);
+    uiManager.showAlert("Error loading data: " + error.message, "danger");
+  });
 }
 
-// CREATE or UPDATE: Handle form submission
-window.createJanitor = async function () {
-  const btn = document.getElementById("createJanitorBtn");
-  const form = document.getElementById("addJanitorForm");
-
-  // Get values
-  const name = document.getElementById("janitorName").value;
-  const email = document.getElementById("janitorEmail").value;
-  const phone = document.getElementById("janitorPhone").value;
-  const shift = document.getElementById("janitorShift").value;
-  const area = document.getElementById("janitorArea").value;
-  const password = document.getElementById("janitorPassword").value;
-  const notes = document.getElementById("janitorNotes").value;
-
-  // Basic Validation
-  if (!name || !email || !shift || (!isEditing && !password)) {
-    showAlert("Please fill in all required fields.", "warning");
-    return;
-  }
-
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-  btn.disabled = true;
-
+// DEBUG: Check attendance collection
+async function checkAttendanceCollection() {
   try {
-    const janitorData = {
-      name,
-      email,
-      phone,
-      shift,
-      assignedArea: area,
-      notes,
-      role: "janitor", // Add role field
-      // If creating, set defaults. If editing, keep existing or update.
-      status: isEditing
-        ? janitorsData.find((j) => j.id === currentEditId)?.status || "off-duty"
-        : "active",
-      assignedBins: isEditing
-        ? janitorsData.find((j) => j.id === currentEditId)?.assignedBins || 0
-        : 0,
-      lastActive: new Date().toLocaleString(), // Simple string timestamp for display
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-
-    // Note: We are saving the password to Firestore for this demo.
-    // In a real app, you should create an Auth user via Cloud Functions to avoid security risks.
-    if (password) janitorData.tempPassword = password;
-
-    if (isEditing) {
-      // Update existing document
-      await db.collection("users").doc(currentEditId).update(janitorData);
-      showAlert("Janitor updated successfully!", "success");
-    } else {
-      // Create new document
-      janitorData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection("users").add(janitorData);
-      showAlert("Janitor created successfully!", "success");
-    }
-
-    // Reset and Close
-    form.reset();
-    modalElement.hide();
-    resetModalState();
+    console.log("Checking attendance collection...");
+    const attendanceSnapshot = await db.collection("attendance").limit(5).get();
+    console.log(`Found ${attendanceSnapshot.size} documents in attendance collection`);
+    attendanceSnapshot.forEach(doc => {
+      console.log("Sample attendance document:", doc.id, doc.data());
+    });
   } catch (error) {
-    console.error("Error saving janitor:", error);
-    showAlert(error.message, "danger");
-  } finally {
-    btn.innerHTML =
-      '<i class="fas fa-plus"></i> ' +
-      (isEditing ? "Update Janitor" : "Create Janitor");
-    btn.disabled = false;
+    console.error("Error checking attendance collection:", error);
+  }
+}
+
+// DEBUG: Test attendance creation and retrieval
+window.testAttendance = async function(janitorId) {
+  try {
+    console.log(`Testing attendance for janitor ${janitorId}`);
+
+    // Create a test attendance record
+    const testTimestamp = new Date();
+    console.log("Creating test attendance record...");
+    await attendanceManager.createAttendanceRecord(janitorId, 'clock-in', testTimestamp);
+
+    // Wait a moment for Firestore to update
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Try to retrieve it
+    console.log("Retrieving attendance records...");
+    const records = await attendanceManager.loadJanitorAttendance(janitorId);
+    console.log(`Retrieved ${records.records.length} records after test creation`);
+
+    uiManager.showAlert(`Test completed. Found ${records.records.length} attendance records.`, "info");
+  } catch (error) {
+    console.error("Test attendance failed:", error);
+    uiManager.showAlert("Test attendance failed: " + error.message, "danger");
   }
 };
 
-// DELETE
-window.deleteJanitor = async function (id) {
-  if (
-    confirm(
-      "Are you sure you want to delete this janitor? This action cannot be undone.",
-    )
-  ) {
-    try {
-      await db.collection("users").doc(id).delete();
-      showAlert("Janitor deleted successfully.", "success");
-    } catch (error) {
-      console.error("Error deleting:", error);
-      showAlert("Failed to delete janitor.", "danger");
+// FILTER JANITORS
+function filterJanitors() {
+  const term = searchInput.value.toLowerCase().trim();
+  const status = statusFilter.value;
+  const shift = shiftFilter.value;
+
+  console.log("Filtering with:", { term, status, shift });
+  console.log("Total janitors:", janitorsData.length);
+
+  // Debug: Log all unique shifts and statuses
+  const uniqueShifts = [...new Set(janitorsData.map(j => j.shift).filter(s => s))];
+  const uniqueStatuses = [...new Set(janitorsData.map(j => j.status).filter(s => s))];
+  console.log("Available shifts in data:", uniqueShifts);
+  console.log("Available statuses in data:", uniqueStatuses);
+
+  const filtered = janitorsData.filter((janitor) => {
+    // Search term matching (name, email, phone, or ID)
+    const matchesTerm = !term ||
+      janitor.name?.toLowerCase().includes(term) ||
+      janitor.email?.toLowerCase().includes(term) ||
+      janitor.phone?.includes(term) ||
+      janitor.id?.toLowerCase().includes(term) || false;
+
+    // Status matching (case-insensitive)
+    const matchesStatus = status === "all" ||
+      (janitor.status && janitor.status.toLowerCase() === status.toLowerCase());
+
+    // Shift matching (case-insensitive)
+    const matchesShift = shift === "all" ||
+      (janitor.shift && janitor.shift.toLowerCase() === shift.toLowerCase());
+
+    const result = matchesTerm && matchesStatus && matchesShift;
+
+    // Debug: Log why janitors are filtered out
+    if (shift !== "all" && !matchesShift) {
+      console.log("Filtered out janitor due to shift:", janitor.name, "shift:", janitor.shift, "filter:", shift);
     }
-  }
+
+    return result;
+  });
+
+  console.log("Filtered results:", filtered.length);
+  uiManager.renderJanitors(filtered);
+  uiManager.updateStats(filtered); // Also update stats for filtered results
+}
+
+// WINDOW FUNCTIONS (Global event handlers)
+
+// Add new janitor
+window.addNewJanitor = function () {
+  formManager.resetModalState();
+  formManager.modalElement.show();
 };
 
-// PREPARE EDIT
+// Create/update janitor
+window.createJanitor = function () {
+  formManager.createJanitor();
+};
+
+// Delete janitor
+window.deleteJanitor = function (id) {
+  formManager.deleteJanitor(id);
+};
+
+// Edit janitor
 window.editJanitor = function (id) {
-  const janitor = janitorsData.find((j) => j.id === id);
-  if (!janitor) return;
-
-  isEditing = true;
-  currentEditId = id;
-
-  // Populate Form
-  document.getElementById("janitorName").value = janitor.name;
-  document.getElementById("janitorEmail").value = janitor.email;
-  document.getElementById("janitorPhone").value = janitor.phone;
-  document.getElementById("janitorShift").value = janitor.shift;
-  document.getElementById("janitorArea").value = janitor.assignedArea || "";
-  document.getElementById("janitorNotes").value = janitor.notes || "";
-
-  // Password is usually not retrieved for security, user can leave blank to keep current
-  document.getElementById("janitorPassword").placeholder =
-    "Leave blank to keep current password";
-  document.getElementById("janitorPassword").required = false;
-
-  // Change Button Text
-  document.getElementById("createJanitorBtn").innerHTML =
-    '<i class="fas fa-save"></i> Update Janitor';
-  document.getElementById("addJanitorModalLabel").innerHTML =
-    '<i class="fas fa-user-edit"></i> Edit Janitor';
-
-  // Show Modal
-  modalElement.show();
+  formManager.editJanitor(id, janitorsData);
 };
 
-// VIEW DETAILS - Show detailed view in modal
-window.viewJanitor = function (id) {
+// View janitor details
+window.viewJanitor = async function (id) {
   const janitor = janitorsData.find((j) => j.id === id);
   if (!janitor) return;
 
-  // Populate modal with janitor data
-  document.getElementById("viewJanitorName").textContent = janitor.name;
-  document.getElementById("viewJanitorId").textContent = janitor.id
-    .substring(0, 8)
-    .toUpperCase();
-  document.getElementById("viewJanitorEmail").textContent = janitor.email;
-  document.getElementById("viewJanitorPhone").textContent =
-    janitor.phone || "Not provided";
-  document.getElementById("viewJanitorShift").textContent = getShiftText(
-    janitor.shift,
-  );
-  document.getElementById("viewJanitorArea").textContent =
-    janitor.assignedArea || "Not assigned";
-  document.getElementById("viewJanitorBins").textContent =
-    `${janitor.assignedBins || 0} bins`;
-  document.getElementById("viewJanitorLastActive").textContent =
-    janitor.lastActive || "Never";
+  // Populate modal
+  uiManager.populateViewModal(janitor);
 
-  // Set avatar
-  const avatarEl = document.getElementById("viewJanitorAvatar");
-  avatarEl.textContent = getInitials(janitor.name);
-  avatarEl.className = `profile-avatar ${getAvatarClass(janitorsData.indexOf(janitor))}`;
+  // Load attendance data
+  try {
+    console.log(`Loading attendance for janitor ${id}`);
+    const attendanceData = await attendanceManager.loadJanitorAttendance(id);
+    console.log(`Loaded ${attendanceData.records.length} attendance records`);
+    console.log('Attendance records:', attendanceData.records);
 
-  // Set status badge
-  const statusEl = document.getElementById("viewJanitorStatus");
-  statusEl.textContent = getStatusText(janitor.status);
-  statusEl.className = `status-badge ${getStatusClass(janitor.status).replace("status-badge ", "")}`;
+    document.getElementById("viewJanitorWorkHours").textContent = `${attendanceData.workHours.toFixed(1)} hours`;
+    uiManager.renderAttendanceRecords(attendanceData.records);
 
-  // Handle notes section
-  const notesSection = document.getElementById("viewNotesSection");
-  const notesEl = document.getElementById("viewJanitorNotes");
-  if (janitor.notes && janitor.notes.trim()) {
-    notesEl.textContent = janitor.notes;
-    notesSection.style.display = "block";
-  } else {
-    notesSection.style.display = "none";
+    // Update buttons
+    uiManager.updateBreakDutyButtonWithStatus(id, janitor.status);
+    uiManager.updateClockButtonWithStatus(id, janitor.status);
+  } catch (error) {
+    console.error("Error loading attendance:", error);
+    document.getElementById("viewJanitorWorkHours").textContent = "Error loading data";
   }
 
-  // Store current janitor ID for edit functionality
+  // Store current janitor ID
   viewModalElement.currentJanitorId = id;
-
-  // Show modal
   viewModalElement.show();
 };
 
@@ -256,197 +230,35 @@ window.viewJanitor = function (id) {
 window.editJanitorFromView = function () {
   if (viewModalElement.currentJanitorId) {
     viewModalElement.hide();
-    // Small delay to allow view modal to close before opening edit modal
     setTimeout(() => {
       editJanitor(viewModalElement.currentJanitorId);
     }, 300);
   }
 };
 
-// --- HELPER FUNCTIONS ---
+// Set janitor status
+window.setJanitorStatus = function (id, newStatus) {
+  statusManager.setJanitorStatus(id, newStatus, janitorsData);
+};
 
-// Handle Modal Close/Reset
-const myModalEl = document.getElementById("addJanitorModal");
-myModalEl.addEventListener("hidden.bs.modal", function () {
-  resetModalState();
-});
+// Toggle clock in/out
+window.toggleClockInOut = function () {
+  statusManager.toggleClockInOut(viewModalElement.currentJanitorId, janitorsData);
+};
 
-function resetModalState() {
-  document.getElementById("addJanitorForm").reset();
-  isEditing = false;
-  currentEditId = null;
-  document.getElementById("createJanitorBtn").innerHTML =
-    '<i class="fas fa-plus"></i> Create Janitor';
-  document.getElementById("addJanitorModalLabel").innerHTML =
-    '<i class="fas fa-user-plus"></i> Add New Janitor';
-  document.getElementById("janitorPassword").required = true;
-  document.getElementById("janitorPassword").placeholder =
-    "Enter temporary password";
-}
-
-// Render the Table (Using your exact template)
-function renderJanitors(data) {
-  console.log("Rendering janitors:", data.length, data); // Debug log
-  tableBody.innerHTML = "";
-
-  if (data.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No janitors found</td></tr>`;
+// Toggle break/duty status
+window.toggleBreakDuty = function () {
+  if (!viewModalElement.currentJanitorId) {
     return;
   }
 
-  data.forEach((janitor, index) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-            <td>
-                <div class="janitor-info">
-                    <div class="${getAvatarClass(index)}">
-                        ${getInitials(janitor.name)}
-                    </div>
-                    <div class="janitor-details">
-                        <h6>${janitor.name}</h6>
-                        <p>ID: ${janitor.id.substring(0, 6).toUpperCase()}</p>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <span class="${getStatusClass(janitor.status)}">
-                    ${getStatusText(janitor.status)}
-                </span>
-            </td>
-            <td>
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${janitor.phone || "N/A"}</span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>${janitor.email}</span>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <span class="shift-badge">${getShiftText(janitor.shift)}</span>
-            </td>
-            <td>
-                <div class="assigned-bins">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>${janitor.assignedBins} bins</span>
-                </div>
-            </td>
-            <td>${janitor.lastActive || "Never"}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn btn-view" onclick="viewJanitor('${janitor.id}')" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="action-btn btn-edit" onclick="editJanitor('${janitor.id}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn btn-delete" onclick="deleteJanitor('${janitor.id}')" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-    tableBody.appendChild(row);
-  });
-}
+  const janitor = janitorsData.find(j => j.id === viewModalElement.currentJanitorId);
+  if (!janitor) return;
 
-// Filter Logic
-function filterJanitors() {
-  const term = searchInput.value.toLowerCase();
-  const status = statusFilter.value;
-  const shift = shiftFilter.value;
-
-  const filtered = janitorsData.filter((janitor) => {
-    const matchesTerm =
-      janitor.name.toLowerCase().includes(term) ||
-      janitor.email.toLowerCase().includes(term) ||
-      janitor.phone.includes(term);
-    const matchesStatus = status === "all" || janitor.status === status;
-    const matchesShift = shift === "all" || janitor.shift === shift;
-
-    return matchesTerm && matchesStatus && matchesShift;
-  });
-
-  renderJanitors(filtered);
-}
-
-// Update Stats Cards
-function updateStats(data) {
-  document.getElementById("totalJanitors").innerText = data.length;
-  document.getElementById("activeJanitors").innerText = data.filter(
-    (j) => j.status === "active",
-  ).length;
-  document.getElementById("onBreakJanitors").innerText = data.filter(
-    (j) => j.status === "on-break",
-  ).length;
-  document.getElementById("offDutyJanitors").innerText = data.filter(
-    (j) => j.status === "off-duty",
-  ).length;
-}
-
-// UI Helpers (Required for your template)
-function getInitials(name) {
-  return name
-    ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase()
-    : "??";
-}
-
-function getAvatarClass(index) {
-  const colors = [
-    "avatar-blue",
-    "avatar-green",
-    "avatar-purple",
-    "avatar-orange",
-  ];
-  return `avatar-circle ${colors[index % colors.length]}`;
-}
-
-function getStatusClass(status) {
-  switch (status) {
-    case "active":
-      return "status-badge status-active";
-    case "on-break":
-      return "status-badge status-warning"; // changed to warning for visibility
-    case "off-duty":
-      return "status-badge status-inactive";
-    default:
-      return "status-badge status-inactive";
+  // Toggle between active and on-break
+  if (janitor.status === 'active') {
+    statusManager.setJanitorStatus(viewModalElement.currentJanitorId, 'on-break', janitorsData);
+  } else if (janitor.status === 'on-break') {
+    statusManager.setJanitorStatus(viewModalElement.currentJanitorId, 'active', janitorsData);
   }
-}
-
-function getStatusText(status) {
-  if (!status) return "Unknown";
-  return status.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-}
-
-function getShiftText(shift) {
-  if (!shift) return "Unassigned";
-  return shift.charAt(0).toUpperCase() + shift.slice(1);
-}
-
-// Alert Helper
-function showAlert(message, type) {
-  const alertPlaceholder = document.getElementById("alertContainer");
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = [
-    `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-    `   <div>${message}</div>`,
-    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-    "</div>",
-  ].join("");
-
-  alertPlaceholder.append(wrapper);
-
-  // Auto remove after 3 seconds
-  setTimeout(() => {
-    wrapper.remove();
-  }, 3000);
-}
+};

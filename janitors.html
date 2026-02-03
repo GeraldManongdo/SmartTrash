@@ -46,6 +46,18 @@
             Janitors
           </a>
         </li>
+        <li class="nav-item">
+          <a href="leaderboard.html" class="nav-link-custom">
+            <i class="fas fa-trophy"></i>
+            Leaderboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="user_activities.html" class="nav-link-custom">
+            <i class="fas fa-history"></i>
+            User Activities
+          </a>
+        </li>
       </ul>
 
       <a href="#" class="logout-btn" data-logout>
@@ -132,7 +144,6 @@
               <th>Status</th>
               <th>Contact</th>
               <th>Shift</th>
-              <th>Assigned Bins</th>
               <th>Last Active</th>
               <th>Actions</th>
             </tr>
@@ -215,6 +226,14 @@
                     <option value="night">Night Shift (10 PM - 6 AM)</option>
                   </select>
                 </div>
+                <div class="form-group">
+                  <label for="janitorDutyStatus">Initial Duty Status</label>
+                  <select class="form-select-custom" id="janitorDutyStatus">
+                    <option value="off-duty">Off Duty</option>
+                    <option value="active">On Duty</option>
+                    <option value="on-break">On Break</option>
+                  </select>
+                </div>
               </div>
 
               <div class="form-row">
@@ -281,7 +300,7 @@
       aria-labelledby="viewJanitorModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="viewJanitorModalLabel">
@@ -298,99 +317,135 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="janitor-profile">
-              <div class="profile-header">
-                <div class="profile-avatar" id="viewJanitorAvatar">JD</div>
-                <div class="profile-info">
-                  <h4 id="viewJanitorName">John Doe</h4>
-                  <p class="janitor-id">
-                    ID: <span id="viewJanitorId">ABC123</span>
-                  </p>
-                  <span class="status-badge" id="viewJanitorStatus"
-                    >Active</span
-                  >
+            <div class="janitor-profile-grid">
+              <!-- Left Column: Basic Information -->
+              <div class="profile-left-column">
+                <div class="profile-header">
+                  <div class="profile-avatar" id="viewJanitorAvatar">JD</div>
+                  <div class="profile-info">
+                    <h4 id="viewJanitorName">John Doe</h4>
+                    <p class="janitor-id">
+                      ID: <span id="viewJanitorId">ABC123</span>
+                    </p>
+                    <span class="status-badge" id="viewJanitorStatus">Active</span>
+                  </div>
+                </div>
+
+                <div class="profile-details">
+                  <div class="details-grid">
+                    <div class="detail-card">
+                      <div class="detail-icon">
+                        <i class="fas fa-envelope"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Email Address</label>
+                        <p id="viewJanitorEmail">john.doe@example.com</p>
+                      </div>
+                    </div>
+
+                    <div class="detail-card">
+                      <div class="detail-icon">
+                        <i class="fas fa-phone"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Phone Number</label>
+                        <p id="viewJanitorPhone">+1 234 567 8900</p>
+                      </div>
+                    </div>
+
+                    <div class="detail-card">
+                      <div class="detail-icon">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Work Shift</label>
+                        <p id="viewJanitorShift">Morning Shift</p>
+                      </div>
+                    </div>
+
+                    <div class="detail-card">
+                      <div class="detail-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Assigned Area</label>
+                        <p id="viewJanitorArea">Building A - Main Lobby</p>
+                      </div>
+                    </div>
+
+                    <div class="detail-card">
+                      <div class="detail-icon">
+                        <i class="fas fa-history"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Last Active</label>
+                        <p id="viewJanitorLastActive">2 hours ago</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="detail-card full-width">
+                    <div class="detail-icon">
+                      <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="detail-content">
+                      <label>Work Hours (Last 30 Days)</label>
+                      <p id="viewJanitorWorkHours">Calculating...</p>
+                    </div>
+                  </div>
+
+                  <div class="notes-section" id="viewNotesSection" style="display: none">
+                    <div class="detail-card full-width">
+                      <div class="detail-icon">
+                        <i class="fas fa-sticky-note"></i>
+                      </div>
+                      <div class="detail-content">
+                        <label>Notes</label>
+                        <p id="viewJanitorNotes">Additional notes about the janitor...</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="profile-details">
-                <div class="details-grid">
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-envelope"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Email Address</label>
-                      <p id="viewJanitorEmail">john.doe@example.com</p>
-                    </div>
-                  </div>
-
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-phone"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Phone Number</label>
-                      <p id="viewJanitorPhone">+1 234 567 8900</p>
-                    </div>
-                  </div>
-
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Work Shift</label>
-                      <p id="viewJanitorShift">Morning Shift</p>
-                    </div>
-                  </div>
-
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Assigned Area</label>
-                      <p id="viewJanitorArea">Building A - Main Lobby</p>
-                    </div>
-                  </div>
-
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-trash-alt"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Assigned Bins</label>
-                      <p id="viewJanitorBins">8 bins</p>
-                    </div>
-                  </div>
-
-                  <div class="detail-card">
-                    <div class="detail-icon">
-                      <i class="fas fa-history"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Last Active</label>
-                      <p id="viewJanitorLastActive">2 hours ago</p>
-                    </div>
-                  </div>
+              <!-- Right Column: Attendance History -->
+              <div class="profile-right-column">
+                <div class="attendance-header">
+                  <h5><i class="fas fa-calendar-check"></i> Attendance History</h5>
+                  <button class="btn-clock-in-out" id="clockBtn" onclick="toggleClockInOut()">
+                    <i class="fas fa-clock"></i> Clock In
+                  </button>
                 </div>
 
-                <div
-                  class="notes-section"
-                  id="viewNotesSection"
-                  style="display: none"
-                >
-                  <div class="detail-card full-width">
-                    <div class="detail-icon">
-                      <i class="fas fa-sticky-note"></i>
-                    </div>
-                    <div class="detail-content">
-                      <label>Notes</label>
-                      <p id="viewJanitorNotes">
-                        Additional notes about the janitor...
-                      </p>
+                <div class="attendance-controls">
+                  <button class="btn-status-toggle" id="breakDutyBtn" onclick="toggleBreakDuty()" disabled style="display: none;">
+                    <i class="fas fa-clock"></i> Clocked Out
+                  </button>
+                </div>
+
+                <div class="attendance-records" id="attendanceRecords">
+                  <div class="attendance-record">
+                    <div class="record-date">Feb 3, 2025</div>
+                    <div class="record-details">
+                      <div class="record-entry">
+                        <span class="entry-type">Clock In</span>
+                        <span class="entry-time">08:30 AM</span>
+                      </div>
+                      <div class="record-entry">
+                        <span class="entry-type">Break Start</span>
+                        <span class="entry-time">12:00 PM</span>
+                      </div>
+                      <div class="record-entry">
+                        <span class="entry-type">Break End</span>
+                        <span class="entry-time">12:30 PM</span>
+                      </div>
+                      <div class="record-entry">
+                        <span class="entry-type">Clock Out</span>
+                        <span class="entry-time">04:30 PM</span>
+                      </div>
                     </div>
                   </div>
+                  <!-- More records will be loaded here -->
                 </div>
               </div>
             </div>
@@ -423,6 +478,113 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/logout.js"></script>
+
+    <!-- Modular JavaScript files -->
+    <script src="assets/js/modules/firebase-operations.js"></script>
+    <script src="assets/js/modules/attendance-manager.js"></script>
+    <script src="assets/js/modules/ui-manager.js"></script>
+    <script src="assets/js/modules/form-manager.js"></script>
+    <script src="assets/js/modules/status-manager.js"></script>
     <script src="assets/js/janitors.js"></script>
+
+    <!-- Inline Filter Script -->
+    <script>
+      // Store original data for filtering
+      let allJanitorsData = [];
+
+      // Wait for janitors.js to load and then set up inline filters
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          setupInlineFilters();
+        }, 1000);
+      });
+
+      function setupInlineFilters() {
+        const searchInput = document.getElementById("searchInput");
+        const statusFilter = document.getElementById("statusFilter");
+        const shiftFilter = document.getElementById("shiftFilter");
+
+        if (!searchInput || !statusFilter || !shiftFilter) {
+          console.error("Filter elements not found");
+          return;
+        }
+
+        console.log("Inline filters setup successfully");
+
+        // Attach event listeners
+        searchInput.addEventListener("input", applyFilters);
+        searchInput.addEventListener("keyup", applyFilters);
+        statusFilter.addEventListener("change", applyFilters);
+        statusFilter.addEventListener("input", applyFilters);
+        shiftFilter.addEventListener("change", applyFilters);
+        shiftFilter.addEventListener("input", applyFilters);
+
+        console.log("Inline filter event listeners attached");
+      }
+
+      function applyFilters() {
+        const searchInput = document.getElementById("searchInput");
+        const statusFilter = document.getElementById("statusFilter");
+        const shiftFilter = document.getElementById("shiftFilter");
+
+        if (!janitorsData || janitorsData.length === 0) {
+          console.log("No janitors data available");
+          return;
+        }
+
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
+        const shiftValue = shiftFilter.value;
+
+        console.log("=== APPLY FILTERS ===");
+        console.log("Search term:", searchTerm);
+        console.log("Status filter:", statusValue);
+        console.log("Shift filter:", shiftValue);
+        console.log("Total janitors:", janitorsData.length);
+
+        // Filter the janitors
+        const filtered = janitorsData.filter((janitor) => {
+          // Search filter
+          let matchesSearch = true;
+          if (searchTerm) {
+            matchesSearch = 
+              (janitor.name && janitor.name.toLowerCase().includes(searchTerm)) ||
+              (janitor.email && janitor.email.toLowerCase().includes(searchTerm)) ||
+              (janitor.phone && janitor.phone.includes(searchTerm)) ||
+              (janitor.id && janitor.id.toLowerCase().includes(searchTerm));
+          }
+
+          // Status filter
+          const matchesStatus = statusValue === "all" || janitor.status === statusValue;
+
+          // Shift filter
+          const matchesShift = shiftValue === "all" || janitor.shift === shiftValue;
+
+          const result = matchesSearch && matchesStatus && matchesShift;
+
+          if (!result && (searchTerm || statusValue !== "all" || shiftValue !== "all")) {
+            console.log(`Filtered out: ${janitor.name} - Search: ${matchesSearch}, Status: ${matchesStatus}, Shift: ${matchesShift}`);
+          }
+
+          return result;
+        });
+
+        console.log("Filtered count:", filtered.length);
+        console.log("====================");
+
+        // Render filtered results
+        if (uiManager && typeof uiManager.renderJanitors === "function") {
+          uiManager.renderJanitors(filtered);
+        }
+
+        // Update stats
+        if (uiManager && typeof uiManager.updateStats === "function") {
+          uiManager.updateStats(filtered);
+        }
+      }
+
+      // Override the original filterJanitors if it exists
+      window.filterJanitors = applyFilters;
+    </script>
   </body>
 </html>

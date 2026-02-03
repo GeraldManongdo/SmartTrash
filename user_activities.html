@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Activities - Smart Trash</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/bins.css" />
+    <link rel="stylesheet" href="assets/css/user_activities.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo-section">
+        <div class="logo-icon">
+          <i class="fas fa-recycle"></i>
+        </div>
+        <div class="logo-text">
+          <h4>Smart Trash</h4>
+          <p>Admin Panel</p>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link-custom">
+            <i class="fas fa-th-large"></i>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="bins.html" class="nav-link-custom">
+            <i class="fas fa-trash-alt"></i>
+            Trash Bins
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="janitors.html" class="nav-link-custom">
+            <i class="fas fa-users"></i>
+            Janitors
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="leaderboard.html" class="nav-link-custom">
+            <i class="fas fa-trophy"></i>
+            Leaderboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="user_activities.html" class="nav-link-custom active">
+            <i class="fas fa-history"></i>
+            User Activities
+          </a>
+        </li>
+      </ul>
+
+      <a href="#" class="logout-btn" data-logout>
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-header">
+        <div class="header-section">
+          <h1>User Activities</h1>
+          <p>Log of all user activities</p>
+        </div>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="filters-section">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label>Search</label>
+            <div class="search-wrapper">
+              <i class="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Search by email or activity..."
+              />
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select class="filter-select" id="sortFilter">
+              <option value="timestamp">Timestamp</option>
+              <option value="activity">Activity</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activities Table -->
+      <div class="janitors-table-container">
+        <table class="janitors-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Email</th>
+              <th>Activity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesBody">
+            <!-- Data will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- View Activity Details Modal -->
+    <div
+      class="modal fade"
+      id="viewActivityModal"
+      tabindex="-1"
+      aria-labelledby="viewActivityModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-history"></i>
+              Activity Details
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="details-grid">
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="detail-content">
+                  <label>Timestamp</label>
+                  <p id="viewTimestamp">-</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div class="detail-content">
+                  <label>Email</label>
+                  <p id="viewEmail">-</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-bolt"></i>
+                </div>
+                <div class="detail-content">
+                  <label>Activity</label>
+                  <p id="viewActivity">-</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-globe"></i>
+                </div>
+                <div class="detail-content">
+                  <label>Page</label>
+                  <p id="viewPage">-</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-desktop"></i>
+                </div>
+                <div class="detail-content">
+                  <label>User Agent</label>
+                  <p id="viewUserAgent">-</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-icon">
+                  <i class="fas fa-id-badge"></i>
+                </div>
+                <div class="detail-content">
+                  <label>User ID</label>
+                  <p id="viewUserId">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-modal-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase v8 SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/logout.js"></script>
+    <script src="assets/js/user_activities.js"></script>
+  </body>
+</html>
