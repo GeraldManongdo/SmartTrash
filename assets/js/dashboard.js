@@ -52,15 +52,15 @@ function updateDashboardStats() {
   // Update total bins
   document.getElementById("totalBins").textContent = binsData.length;
 
-  // Calculate status counts based on wet level
+  // Calculate status counts based on combined wet + dry level
   const criticalBins = binsData.filter((bin) => {
-    const wetLevel = bin.wetLevel || 0;
-    return wetLevel >= 75; // Critical and Urgent combined
+    const totalLevel = (bin.wetLevel || 0) + (bin.dryLevel || 0);
+    return totalLevel >= 75; // Critical and Urgent combined
   }).length;
 
   const warningBins = binsData.filter((bin) => {
-    const wetLevel = bin.wetLevel || 0;
-    return wetLevel >= 50 && wetLevel < 75;
+    const totalLevel = (bin.wetLevel || 0) + (bin.dryLevel || 0);
+    return totalLevel >= 50 && totalLevel < 75;
   }).length;
 
   // Update stats
@@ -94,8 +94,8 @@ function renderBinsRequiringAttention() {
 
   // Filter bins that need attention
   const attentionBins = binsData.filter((bin) => {
-    const wetLevel = bin.wetLevel || 0;
-    return wetLevel >= 50; // Warning, Critical, or Urgent
+    const totalLevel = (bin.wetLevel || 0) + (bin.dryLevel || 0);
+    return totalLevel >= 50; // Warning, Critical, or Urgent
   });
 
   container.innerHTML = "";
@@ -111,14 +111,19 @@ function renderBinsRequiringAttention() {
     return;
   }
 
-  // Sort by priority (highest wet level first)
-  attentionBins.sort((a, b) => (b.wetLevel || 0) - (a.wetLevel || 0));
+  // Sort by priority (highest total level first)
+  attentionBins.sort((a, b) => {
+    const totalA = (a.wetLevel || 0) + (a.dryLevel || 0);
+    const totalB = (b.wetLevel || 0) + (b.dryLevel || 0);
+    return totalB - totalA;
+  });
 
   attentionBins.forEach((bin) => {
     const binCard = document.createElement("div");
     binCard.className = "bin-card";
 
-    const status = calculateBinStatus(bin.wetLevel || 0);
+    const totalLevel = (bin.wetLevel || 0) + (bin.dryLevel || 0);
+    const status = calculateBinStatus(totalLevel);
     const statusClass = getStatusClass(status);
     const statusText = getStatusText(status);
 
@@ -182,19 +187,16 @@ function renderBinsRequiringAttention() {
   });
 }
 
-// Calculate bin status based on wet level
-function calculateBinStatus(wetLevel) {
-  if (wetLevel >= 95) return "urgent";
-  if (wetLevel >= 75) return "critical";
-  if (wetLevel >= 50) return "warning";
+// Calculate bin status based on total level (wet + dry)
+function calculateBinStatus(totalLevel) {
+  if (totalLevel >= 75) return "critical";
+  if (totalLevel >= 50) return "warning";
   return "normal";
 }
 
 // Get status CSS class
 function getStatusClass(status) {
   switch (status) {
-    case "urgent":
-      return "status-urgent";
     case "critical":
       return "status-critical";
     case "warning":
@@ -208,7 +210,7 @@ function getStatusClass(status) {
 function getStatusText(status) {
   switch (status) {
     case "urgent":
-      return "Must Collect";
+      return "Critical";
     case "critical":
       return "Critical";
     case "warning":

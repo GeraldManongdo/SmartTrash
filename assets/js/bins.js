@@ -22,6 +22,24 @@ document.addEventListener("DOMContentLoaded", () => {
   searchInput.addEventListener("input", filterBins);
   statusFilter.addEventListener("change", filterBins);
 
+  // Enforce max value of 100 for wet and dry levels
+  const wetLevelInput = document.getElementById("binWetLevel");
+  const dryLevelInput = document.getElementById("binDryLevel");
+
+  if (wetLevelInput) {
+    wetLevelInput.addEventListener("input", function () {
+      if (parseInt(this.value) > 100) this.value = 100;
+      if (parseInt(this.value) < 0) this.value = 0;
+    });
+  }
+
+  if (dryLevelInput) {
+    dryLevelInput.addEventListener("input", function () {
+      if (parseInt(this.value) > 100) this.value = 100;
+      if (parseInt(this.value) < 0) this.value = 0;
+    });
+  }
+
   // Navigation
   const navLinks = document.querySelectorAll(".nav-link-custom");
   navLinks.forEach((link) => {
@@ -65,8 +83,12 @@ window.submitBinForm = async function () {
   // Get values
   const name = document.getElementById("binName").value;
   const location = document.getElementById("binLocation").value;
-  const wetLevel = parseInt(document.getElementById("binWetLevel")?.value || 0);
-  const dryLevel = parseInt(document.getElementById("binDryLevel")?.value || 0);
+  let wetLevel = parseInt(document.getElementById("binWetLevel")?.value || 0);
+  let dryLevel = parseInt(document.getElementById("binDryLevel")?.value || 0);
+
+  // Clamp values between 0 and 100
+  wetLevel = Math.max(0, Math.min(100, wetLevel));
+  dryLevel = Math.max(0, Math.min(100, dryLevel));
 
   // Basic Validation
   if (!name || !location) {
@@ -81,9 +103,7 @@ window.submitBinForm = async function () {
     if (isEditing) {
       // Calculate status based on wet and dry level for update
       let status;
-      if (wetLevel + dryLevel >= 95) {
-        status = "urgent";
-      } else if (wetLevel + dryLevel >= 75) {
+       if (wetLevel + dryLevel > 75) {
         status = "critical";
       } else if (wetLevel + dryLevel >= 50) {
         status = "warning";
@@ -300,7 +320,11 @@ function filterBins() {
       bin.name.toLowerCase().includes(term) ||
       bin.location.toLowerCase().includes(term) ||
       bin.id.toLowerCase().includes(term);
-    const matchesStatus = status === "all" || bin.status === status;
+    // Match "critical" filter with both "critical" and "urgent" status
+    const matchesStatus =
+      status === "all" ||
+      bin.status === status ||
+      (status === "critical" && bin.status === "urgent");
 
     return matchesTerm && matchesStatus;
   });
@@ -330,7 +354,7 @@ function getStatusClass(status) {
 
 function getStatusText(status) {
   if (!status) return "Unknown";
-  if (status === "urgent") return "Must Collect";
+  if (status === "urgent") return "Critical";
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 

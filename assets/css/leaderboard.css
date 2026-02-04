@@ -111,3 +111,37 @@
   color: #333;
   word-wrap: break-word;
 }
+
+.rank-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.rank-number {
+  min-width: 16px;
+}
+
+.rank-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+}
+
+.rank-medal.gold {
+  background: #d4af37;
+}
+
+.rank-medal.silver {
+  background: #c0c0c0;
+}
+
+.rank-medal.bronze {
+  background: #cd7f32;
+}

@@ -48,6 +48,7 @@ class FirebaseOperations {
       name: janitorData.name,
       email: janitorData.email,
       totalPoints: 0, // Start with 0 points
+      collectedbins: 0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
