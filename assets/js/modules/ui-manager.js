@@ -48,7 +48,7 @@ class UIManager {
           </div>
         </td>
         <td>
-          <span class="shift-badge">${this.getShiftText(janitor.shift)}</span>
+          <span class="shift-badge ${this.getShiftClass(janitor.shift)}">${this.getShiftText(janitor.shift)}</span>
         </td>
         <td>${janitor.lastActive || "Never"}</td>
         <td>
@@ -112,13 +112,14 @@ class UIManager {
     const container = document.getElementById("attendanceRecords");
 
     if (records.length === 0) {
-      container.innerHTML = '<div class="no-records">No attendance records found</div>';
+      container.innerHTML =
+        '<div class="no-records">No attendance records found</div>';
       return;
     }
 
     // Group records by date
     const groupedRecords = {};
-    records.forEach(record => {
+    records.forEach((record) => {
       const date = record.timestamp.toLocaleDateString();
       if (!groupedRecords[date]) {
         groupedRecords[date] = [];
@@ -127,11 +128,15 @@ class UIManager {
     });
 
     // Sort dates in descending order
-    const sortedDates = Object.keys(groupedRecords).sort((a, b) => new Date(b) - new Date(a));
+    const sortedDates = Object.keys(groupedRecords).sort(
+      (a, b) => new Date(b) - new Date(a),
+    );
 
-    let html = '';
-    sortedDates.forEach(date => {
-      const dayRecords = groupedRecords[date].sort((a, b) => a.timestamp - b.timestamp);
+    let html = "";
+    sortedDates.forEach((date) => {
+      const dayRecords = groupedRecords[date].sort(
+        (a, b) => a.timestamp - b.timestamp,
+      );
 
       html += `
         <div class="attendance-record">
@@ -139,8 +144,11 @@ class UIManager {
           <div class="record-details">
       `;
 
-      dayRecords.forEach(record => {
-        const time = record.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      dayRecords.forEach((record) => {
+        const time = record.timestamp.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
         const typeText = attendanceManager.getAttendanceTypeText(record.type);
 
         html += `
@@ -169,8 +177,11 @@ class UIManager {
     }
 
     let html = "<div class='attendance-timeline'>";
-    records.forEach(record => {
-      const time = record.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    records.forEach((record) => {
+      const time = record.timestamp.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       const icon = attendanceManager.getAttendanceIcon(record.type);
       const label = attendanceManager.getAttendanceLabel(record.type);
       html += `<div class='attendance-item'>
@@ -220,14 +231,16 @@ class UIManager {
 
   // UPDATE TABLE ROW STATUS
   updateTableRowStatus(janitorId, janitorsData) {
-    const janitor = janitorsData.find(j => j.id === janitorId);
+    const janitor = janitorsData.find((j) => j.id === janitorId);
     if (!janitor) return;
 
     // Find the table row for this janitor
     const tableRows = document.querySelectorAll("#janitorsTableBody tr");
     for (const row of tableRows) {
       // Check if this row belongs to our janitor (by checking the action buttons)
-      const viewBtn = row.querySelector(`button[onclick*="viewJanitor('${janitorId}')"]`);
+      const viewBtn = row.querySelector(
+        `button[onclick*="viewJanitor('${janitorId}')"]`,
+      );
       if (viewBtn) {
         // Update the status cell
         const statusCell = row.querySelector("td:nth-child(2)"); // Status is the 2nd column
@@ -250,20 +263,20 @@ class UIManager {
     const btn = document.getElementById("clockBtn");
     if (!btn) return;
 
-    if (status === 'off-duty') {
+    if (status === "off-duty") {
       // Can clock in
       btn.innerHTML = '<i class="fas fa-clock"></i> Clock In';
-      btn.classList.remove('disabled');
+      btn.classList.remove("disabled");
       btn.disabled = false;
-    } else if (status === 'active') {
+    } else if (status === "active") {
       // Can clock out
       btn.innerHTML = '<i class="fas fa-clock"></i> Clock Out';
-      btn.classList.remove('disabled');
+      btn.classList.remove("disabled");
       btn.disabled = false;
-    } else if (status === 'on-break') {
+    } else if (status === "on-break") {
       // Cannot clock out while on break
       btn.innerHTML = '<i class="fas fa-clock"></i> Clock Out';
-      btn.classList.add('disabled');
+      btn.classList.add("disabled");
       btn.disabled = true;
     }
   }
@@ -273,25 +286,25 @@ class UIManager {
     const btn = document.getElementById("breakDutyBtn");
     if (!btn) return;
 
-    if (status === 'active') {
+    if (status === "active") {
       // Can take break
       btn.innerHTML = '<i class="fas fa-coffee"></i> Take Break';
-      btn.classList.remove('btn-success', 'btn-warning', 'disabled');
-      btn.classList.add('btn-info');
+      btn.classList.remove("btn-success", "btn-warning", "disabled");
+      btn.classList.add("btn-info");
       btn.disabled = false;
-      btn.title = 'Click to take a break';
-      btn.style.display = 'inline-block';
-    } else if (status === 'on-break') {
+      btn.title = "Click to take a break";
+      btn.style.display = "inline-block";
+    } else if (status === "on-break") {
       // Can return to duty
       btn.innerHTML = '<i class="fas fa-play"></i> Return to Duty';
-      btn.classList.remove('btn-success', 'btn-warning', 'disabled');
-      btn.classList.add('btn-info');
+      btn.classList.remove("btn-success", "btn-warning", "disabled");
+      btn.classList.add("btn-info");
       btn.disabled = false;
-      btn.title = 'Click to return to active duty';
-      btn.style.display = 'inline-block';
+      btn.title = "Click to return to active duty";
+      btn.style.display = "inline-block";
     } else {
       // Hide button when off-duty
-      btn.style.display = 'none';
+      btn.style.display = "none";
     }
   }
 
@@ -308,13 +321,7 @@ class UIManager {
   }
 
   getAvatarClass(index) {
-    const colors = [
-      "avatar-1",
-      "avatar-2", 
-      "avatar-3",
-      "avatar-4",
-      "avatar-5"
-    ];
+    const colors = ["avatar-1", "avatar-2", "avatar-3", "avatar-4", "avatar-5"];
     return colors[index % colors.length];
   }
 
@@ -364,6 +371,19 @@ class UIManager {
   getShiftText(shift) {
     if (!shift) return "Unassigned";
     return shift.charAt(0).toUpperCase() + shift.slice(1);
+  }
+
+  getShiftClass(shift) {
+    switch (shift) {
+      case "morning":
+        return "shift-morning";
+      case "evening":
+        return "shift-evening";
+      case "night":
+        return "shift-night";
+      default:
+        return "";
+    }
   }
 
   // SHOW ALERT

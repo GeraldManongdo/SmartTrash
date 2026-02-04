@@ -483,12 +483,27 @@ body {
 
 .shift-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   background-color: #f0f0f0;
   color: #666;
+}
+
+.shift-morning {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.shift-evening {
+  background-color: #fff3e0;
+  color: #ff9800;
+}
+
+.shift-night {
+  background-color: #f3e5f5;
+  color: #9c27b0;
 }
 
 @media (max-width: 1200px) {

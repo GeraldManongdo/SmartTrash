@@ -340,6 +340,11 @@ body {
   color: white;
 }
 
+.status-urgent {
+  background-color: #d32f2f;
+  color: white;
+}
+
 .status-normal {
   background-color: #4caf50;
   color: white;
