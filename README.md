@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Smart Trash** is a comprehensive waste management and environmental sustainability platform designed to manage trash bins, monitor sanitation workers (janitors), track performance, and maintain activity logs. The system uses QR-based management with real-time monitoring capabilities to streamline trash collection operations and promote a cleaner environment.
+**Smart Trash** is a comprehensive waste management and environmental sustainability platform designed to manage trash bins, monitor sanitation workers (janitors), track performance, and maintain activity logs. The system have a monitoring capabilities to streamline trash collection operations and promote a cleaner environment.
 
 ---
 
@@ -11,7 +11,7 @@
 Smart Trash is an **Admin Control Center** that allows managers and supervisors to:
 
 - **Monitor Trash Bins** in real-time with fill level tracking
-- **Manage Janitor Teams** and assign tasks
+- **Manage Janitor Teams** 
 - **Track Performance** through a competitive leaderboard system
 - **Log All Activities** for transparency and accountability
 - **Receive Alerts** when bins require immediate attention
